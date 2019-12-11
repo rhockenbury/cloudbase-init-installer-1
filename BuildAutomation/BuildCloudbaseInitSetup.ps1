@@ -7,10 +7,12 @@ Param(
   [string]$CloudbaseInitRepoUrl = "https://github.com/openstack/cloudbase-init.git",
   [string]$CloudbaseInitRepoBranch = "master",
   # Use an already available installer or clone a new one.
-  [switch]$ClonePullInstallerRepo = $false,
+  [switch]$ClonePullInstallerRepo = $true,
   [string]$InstallerDir = $null,
   [string]$VSRedistDir = "${ENV:ProgramFiles(x86)}\Common Files\Merge Modules",
-  [switch]$CreateZip
+  [switch]$CreateZip=$true,
+  [switch]$SetVCEnvVars=$true,
+  [switch]$RelativePythonDirPath
 )
 
 $ErrorActionPreference = "Stop"
@@ -18,20 +20,26 @@ $ErrorActionPreference = "Stop"
 $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 . "$scriptPath\BuildUtils.ps1"
 
-#SetVCVars
-ls 'C:\Program Files (x86)\Microsoft Visual Studio 14.0'
-ls 'C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC'
-#ls 'C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise'
-# Needed for SSH
-#$ENV:HOME = $ENV:USERPROFILE
+if ($SetVCEnvVars) {
+    Set-VCVars
+}
 
-$python_dir = Join-Path $scriptPath "Python_CloudbaseInit"
+# Needed for SSH
+$ENV:HOME = $ENV:USERPROFILE
+
+$python_dir = "C:\Python_CloudbaseInit"
+$basepath = "C:\OpenStack\build\cloudbase-init"
+
+if ($RelativePythonDirPath) {
+    $python_dir = Join-Path $scriptPath "Python_CloudbaseInit"
+    $basepath = Join-path $scriptPath "build\cloudbase-init"
+}
 
 $ENV:PATH = "$python_dir\;$python_dir\scripts;$ENV:PATH"
-#$ENV:PATH += ";$ENV:ProgramFiles (x86)\Git\bin\"
-#$ENV:PATH += ";$ENV:ProgramFiles\7-zip\"
+$ENV:PATH += ";$ENV:ProgramFiles (x86)\Git\bin\"
+$ENV:PATH += ";$ENV:ProgramFiles\7-zip\"
 
-$basepath = Join-path $scriptPath "build\cloudbase-init"
+
 CheckDir $basepath
 
 pushd .
@@ -97,33 +105,33 @@ try
     }
 
     if ($CreateZip) {
-    $release_dir = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\bin\Release\$platform"
-    $bin_dir = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\Binaries\$platform"
+        $release_dir = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\bin\Release\$platform"
+        $bin_dir = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\Binaries\$platform"
 
-    $zip_content_dir = join-path $release_dir "zip_content"
-    CheckRemoveDir $zip_content_dir
-    mkdir $zip_content_dir
+        $zip_content_dir = join-path $release_dir "zip_content"
+        CheckRemoveDir $zip_content_dir
+        mkdir $zip_content_dir
 
-    $python_dir_release = join-path $zip_content_dir "Python"
-    $bin_dir_release = join-path $zip_content_dir "Bin"
+        $python_dir_release = join-path $zip_content_dir "Python"
+        $bin_dir_release = join-path $zip_content_dir "Bin"
 
-    CheckCopyDir $python_dir $python_dir_release
-    CheckCopyDir $bin_dir $bin_dir_release
+        CheckCopyDir $python_dir $python_dir_release
+        CheckCopyDir $bin_dir $bin_dir_release
 
-    $zip_path = join-path $release_dir "CloudbaseInitSetup.zip"
-    if (Test-Path $zip_path) {
-        del $zip_path
-    }
+        $zip_path = join-path $release_dir "CloudbaseInitSetup.zip"
+        if (Test-Path $zip_path) {
+            del $zip_path
+        }
 
-    pushd $zip_content_dir
-    try
-    {
-        CreateZip $zip_path *
-    }
-    finally
-    {
-        popd
-    }
+        pushd $zip_content_dir
+        try
+        {
+            CreateZip $zip_path *
+        }
+        finally
+        {
+            popd
+        }
     }
 
     $version = &"$python_dir\python.exe" -c "from cloudbaseinit import version; print(version.get_version())"
@@ -160,7 +168,9 @@ try
     if ($LastExitCode) { throw "MSBuild failed" }
 
     $msi_path = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\bin\Release\$platform\CloudbaseInitSetup.msi"
-    Write-Host ("Cloudbaseinit msi is present at: ${0}" -f $msi_path)
+    $msi_path_pdb_path = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\bin\Release\$platform\CloudbaseInitSetup.wixpdb"
+    Write-Host ("Cloudbaseinit MSI path is ${0}" -f $msi_path)
+    Remove-Item -Path $msi_path_pdb_path -Force -ErrorActionPreference SilentlyContinue
 
     if($SignX509Thumbprint)
     {

@@ -16,7 +16,7 @@ jobs:
     - name: Build msi
       shell: cmd
       run: |
-        powershell.exe .\BuildAutomation\BuildCloudbaseInitSetup.ps1
+        powershell.exe .\BuildAutomation\BuildCloudbaseInitSetup.ps1 -ClonePullInstallerRepo:$false -CreateZip:$false -SetVCEnvVars:$false -RelativePythonDirPath
     - uses: actions/upload-artifact@v1
       with:
         name: CloudbaseInit x64 MSI
