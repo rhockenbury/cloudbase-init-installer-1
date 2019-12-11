@@ -18,9 +18,10 @@ $ErrorActionPreference = "Stop"
 $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 . "$scriptPath\BuildUtils.ps1"
 
-SetVCVars
+#SetVCVars
 ls 'C:\Program Files (x86)\Microsoft Visual Studio 14.0'
 ls 'C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC'
+ls 'C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise'
 # Needed for SSH
 #$ENV:HOME = $ENV:USERPROFILE
 
