@@ -1,0 +1,17 @@
+name: Cloudbase-Init build MSI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+    strategy:
+      max-parallel: 100
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build msi
+      shell: cmd
+      run: |
+        powershell.exe .\BuildAutomation\BuildCloudbaseInitSetup.ps1
