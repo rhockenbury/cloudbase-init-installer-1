@@ -1,0 +1,23 @@
+name: Cloudbase-Init build MSI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: windows-2016
+    strategy:
+      max-parallel: 100
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Setup MSBuild.exe
+      uses: warrenbuckley/Setup-MSBuild@v1
+    - name: Build msi
+      shell: cmd
+      run: |
+        powershell.exe .\BuildAutomation\BuildCloudbaseInitSetup.ps1
+    - uses: actions/upload-artifact@v1
+      with:
+        name: CloudbaseInit x64 MSI
+        path: 'CloudbaseInitSetup/bin/Release/x64'

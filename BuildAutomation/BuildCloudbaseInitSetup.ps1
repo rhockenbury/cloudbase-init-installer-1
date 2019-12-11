@@ -7,9 +7,10 @@ Param(
   [string]$CloudbaseInitRepoUrl = "https://github.com/openstack/cloudbase-init.git",
   [string]$CloudbaseInitRepoBranch = "master",
   # Use an already available installer or clone a new one.
-  [switch]$ClonePullInstallerRepo = $true,
+  [switch]$ClonePullInstallerRepo = $false,
   [string]$InstallerDir = $null,
-  [string]$VSRedistDir = "${ENV:ProgramFiles(x86)}\Common Files\Merge Modules"
+  [string]$VSRedistDir = "${ENV:ProgramFiles(x86)}\Common Files\Merge Modules",
+  [switch]$CreateZip
 )
 
 $ErrorActionPreference = "Stop"
@@ -17,18 +18,20 @@ $ErrorActionPreference = "Stop"
 $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 . "$scriptPath\BuildUtils.ps1"
 
-SetVCVars
-
+#SetVCVars
+ls 'C:\Program Files (x86)\Microsoft Visual Studio 14.0'
+ls 'C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC'
+#ls 'C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise'
 # Needed for SSH
-$ENV:HOME = $ENV:USERPROFILE
+#$ENV:HOME = $ENV:USERPROFILE
 
-$python_dir = "C:\Python_CloudbaseInit"
+$python_dir = Join-Path $scriptPath "Python_CloudbaseInit"
 
 $ENV:PATH = "$python_dir\;$python_dir\scripts;$ENV:PATH"
-$ENV:PATH += ";$ENV:ProgramFiles (x86)\Git\bin\"
-$ENV:PATH += ";$ENV:ProgramFiles\7-zip\"
+#$ENV:PATH += ";$ENV:ProgramFiles (x86)\Git\bin\"
+#$ENV:PATH += ";$ENV:ProgramFiles\7-zip\"
 
-$basepath = "C:\OpenStack\build\cloudbase-init"
+$basepath = Join-path $scriptPath "build\cloudbase-init"
 CheckDir $basepath
 
 pushd .
@@ -93,6 +96,7 @@ try
         ExecRetry { PullInstall "cloudbase-init" $CloudbaseInitRepoUrl $CloudbaseInitRepoBranch }
     }
 
+    if ($CreateZip) {
     $release_dir = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\bin\Release\$platform"
     $bin_dir = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\Binaries\$platform"
 
@@ -119,6 +123,7 @@ try
     finally
     {
         popd
+    }
     }
 
     $version = &"$python_dir\python.exe" -c "from cloudbaseinit import version; print(version.get_version())"
@@ -151,10 +156,11 @@ try
 
     cd $cloudbaseInitInstallerDir
 
-    &msbuild CloudbaseInitSetup.sln /m /p:Platform=$platform /p:Configuration=`"Release`"  /p:DefineConstants=`"PythonSourcePath=$python_dir`;CarbonSourcePath=Carbon`;Version=$msi_version`;VersionStr=$version`"
+    & msbuild.exe CloudbaseInitSetup.sln /m /p:Platform=$platform /p:Configuration=`"Release`"  /p:DefineConstants=`"PythonSourcePath=$python_dir`;CarbonSourcePath=Carbon`;Version=$msi_version`;VersionStr=$version`"
     if ($LastExitCode) { throw "MSBuild failed" }
 
     $msi_path = join-path $cloudbaseInitInstallerDir "CloudbaseInitSetup\bin\Release\$platform\CloudbaseInitSetup.msi"
+    Write-Host ("Cloudbaseinit msi is present at: ${0}" -f $msi_path)
 
     if($SignX509Thumbprint)
     {
