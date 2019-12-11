@@ -207,6 +207,16 @@ function ReplaceVSToolSet($toolset)
     }
 }
 
+function Replace-WixToolSet($toolset) {
+    Get-ChildItem -Filter *.vcxproj -Recurse |
+    Foreach-Object {
+        $vcxprojfile = $_.FullName
+        (Get-Content $vcxprojfile) |
+        Foreach-Object {$_ -replace '\$\(WIX\)sdk\\[^<]+\\', ('$(WIX)sdk\{0}\' -f $toolset)} |
+        Set-Content $vcxprojfile
+    }
+}
+
 function SetRuntimeLibrary($runtimeLibrary)
 {
     Get-ChildItem -Filter *.vcxproj -Recurse |
