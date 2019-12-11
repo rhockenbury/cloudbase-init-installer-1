@@ -19,7 +19,8 @@ $scriptPath = split-path -parent $MyInvocation.MyCommand.Definition
 . "$scriptPath\BuildUtils.ps1"
 
 SetVCVars
-ls 'C:\Program Files (x86)\'
+ls 'C:\Program Files (x86)\Microsoft Visual Studio 14.0'
+ls 'C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC'
 # Needed for SSH
 #$ENV:HOME = $ENV:USERPROFILE
 
