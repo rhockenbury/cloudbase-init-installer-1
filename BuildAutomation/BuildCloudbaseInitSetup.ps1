@@ -138,6 +138,7 @@ try
         {
             popd
         }
+	exit
     }
 
     $version = &"$python_dir\python.exe" -c "from cloudbaseinit import version; print(version.get_version())"
