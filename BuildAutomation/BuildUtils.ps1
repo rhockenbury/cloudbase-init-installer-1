@@ -27,7 +27,7 @@ function GitClonePull($path, $url, $branch="master")
 
     if (!(Test-Path -path $path))
     {
-        git clone -b $branch $url
+        git clone -b $branch $url $path
         if ($LastExitCode) { throw "git clone failed" }
         $needspull = $false
     }
