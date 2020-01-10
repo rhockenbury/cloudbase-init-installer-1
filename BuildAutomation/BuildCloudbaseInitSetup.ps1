@@ -93,6 +93,7 @@ try
         Remove-Item -Recurse -Force $python_build_path
     }
 
+
     ExecRetry { PipInstall "pip" -update $true }
     ExecRetry { PipInstall "wheel" -update $true }
 
