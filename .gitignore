@@ -30,6 +30,7 @@ CloudbaseInitSetup/Binaries/x86/UtilsActions.dll
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 
+
 #NUNIT
 *.VisualState.xml
 TestResult.xml
