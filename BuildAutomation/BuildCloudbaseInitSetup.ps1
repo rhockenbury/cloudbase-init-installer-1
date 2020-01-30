@@ -108,7 +108,7 @@ try
     }
     else
     {
-        ExecRetry { PullInstall "cloudbase-init-1" $CloudbaseInitRepoUrl $CloudbaseInitRepoBranch }
+        ExecRetry { PullInstall "cloudbase-init" $CloudbaseInitRepoUrl $CloudbaseInitRepoBranch }
     }
 
     if ($CreateZip) {
